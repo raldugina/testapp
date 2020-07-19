@@ -1,16 +1,94 @@
 #include <iostream>
 #include <fstream>
- 
+#include <tchar.h>
 #include "main.h"
- 
+#include  <windows.h> 
+// 24/32 бит
+BOOL  SaveArrFile(const TCHAR* filename, const __int32* arr,   MyBITMAPFILEHEADER & fileheader, MyBITMAPINFOHEADER & fileinfoheader ) {
+   
+   
+
+   // DWORD p_row = (DWORD)((width * bpp + 31) & ~31) / 8uL;
+  //  DWORD size = (DWORD)(height * p_row);
+
+    // формируем файловый заголовок
+    BITMAPFILEHEADER  hdr;
+    ZeroMemory(&hdr, sizeof(BITMAPFILEHEADER));
+    hdr.bfType = 0x4D42;
+    hdr.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    hdr.bfSize = hdr.bfOffBits + fileinfoheader.biSize;
+
+    // заголовок описателя растра
+    BITMAPINFO dib;
+    ZeroMemory(&dib, sizeof(BITMAPINFO));
+    dib.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   // dib.bmiHeader.biBitCount = bpp;
+    dib.bmiHeader.biCompression = BI_RGB;
+    dib.bmiHeader.biPlanes = 1u;
+   // dib.bmiHeader.biWidth = (long)width;
+   // dib.bmiHeader.biHeight = (long)-height;
+    //dib.bmiHeader.biSizeImage = size;
+    dib.bmiHeader.biXPelsPerMeter = 11811L;
+    dib.bmiHeader.biYPelsPerMeter = 11811L;
+    dib.bmiHeader.biClrImportant = 0uL;
+    dib.bmiHeader.biClrUsed = 0uL;
+    
+    std::ofstream outfile((const char*)"teststream.bmp", std::ifstream::binary);
+
+   
+
+    
+    // далее запись в файл
+    HANDLE fp = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_WRITE, NULL,
+        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (fp == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    // записываем заголовки...
+    DWORD  dwr = 0uL;
+  WriteFile(fp, (LPCVOID)&hdr, sizeof(BITMAPFILEHEADER), &dwr, NULL);
+  WriteFile(fp, (LPCVOID)&dib.bmiHeader, sizeof(BITMAPINFOHEADER), &dwr, NULL);
+
+    outfile.write((const char*)&fileheader, sizeof(MyBITMAPFILEHEADER));
+    outfile.write((const char*)&fileinfoheader, sizeof(MyBITMAPINFOHEADER)-sizeof(MyCIEXYZTRIPLE)-48);
+    outfile.write((const char*)arr, fileinfoheader.biSizeImage);
+
+
+    // запись массива пикселей
+    if (fileinfoheader.biBitCount == 32) // 32-бит
+        WriteFile(fp, (LPCVOID)arr, fileinfoheader.biSize, &dwr, NULL);
+    else if (fileinfoheader.biBitCount == 24) { // 24-бит с дополнением до 32-разрядной границы
+
+        BYTE   nil = 0u;
+        int   cb = sizeof(RGBQUAD);
+        int  align = ((cb - ((fileinfoheader.biWidth * fileinfoheader.biBitCount + 7) / 8) % cb) % cb);
+
+        for (size_t y = 0; y < fileinfoheader.biHeight; y++) {
+            for (size_t x = 0; x < fileinfoheader.biWidth; x++)
+                WriteFile(fp, (LPCVOID)&arr[y * fileinfoheader.biWidth + x], sizeof(RGBTRIPLE), &dwr, NULL);
+
+            for (int i = 0; i < align; i++) // до границы DWORD
+                WriteFile(fp, (LPCVOID)&nil, sizeof(BYTE), &dwr, NULL);
+        }
+    }
+
+
+    FlushFileBuffers(fp);
+    CloseHandle(fp);
+    outfile.close();
+    return TRUE;
+}
+
+
+
 int main(int argc, char *argv[])
 {
-    if (argc < 2) {
+ /*   if (argc < 2) {
         std::cout << "Usage: " << argv[0] << " file_name" << std::endl;
         return 0;
     }
- 
-    char *fileName = argv[1];
+ */
+    const char * fileName = "C:\\Users\\Aleksandr\\source\\repos\\ConsoleApplication1\\Debug\\RAY.BMP";
  
     // открываем файл
     std::ifstream fileStream(fileName, std::ifstream::binary);
@@ -20,7 +98,7 @@ int main(int argc, char *argv[])
     }
  
     // заголовк изображения
-    BITMAPFILEHEADER fileHeader;
+    MyBITMAPFILEHEADER fileHeader;
     read(fileStream, fileHeader.bfType, sizeof(fileHeader.bfType));
     read(fileStream, fileHeader.bfSize, sizeof(fileHeader.bfSize));
     read(fileStream, fileHeader.bfReserved1, sizeof(fileHeader.bfReserved1));
@@ -33,7 +111,7 @@ int main(int argc, char *argv[])
     }
  
     // информация изображения
-    BITMAPINFOHEADER fileInfoHeader;
+    MyBITMAPINFOHEADER fileInfoHeader;
     read(fileStream, fileInfoHeader.biSize, sizeof(fileInfoHeader.biSize));
  
     // bmp core
@@ -123,18 +201,39 @@ int main(int argc, char *argv[])
     }
  
     // rgb info
-    RGBQUAD **rgbInfo = new RGBQUAD*[fileInfoHeader.biHeight];
+    MyRGBQUAD **rgbInfo = new MyRGBQUAD*[fileInfoHeader.biHeight];
  
     for (unsigned int i = 0; i < fileInfoHeader.biHeight; i++) {
-        rgbInfo[i] = new RGBQUAD[fileInfoHeader.biWidth];
+        rgbInfo[i] = new MyRGBQUAD[fileInfoHeader.biWidth];
     }
  
     // определение размера отступа в конце каждой строки
     int linePadding = ((fileInfoHeader.biWidth * (fileInfoHeader.biBitCount / 8)) % 4) & 3;
  
     // чтение
-    unsigned int bufer;
- 
+   
+    std::cout << fileInfoHeader.biSizeImage;
+    char* buffer = new char[fileInfoHeader.biSizeImage];
+
+    fileStream.read(buffer, fileInfoHeader.biSizeImage);
+    /// <summary>
+    ///  Здесь 
+    /// </summary>
+    /// <param name="argc"></param>
+    /// <param name="argv"></param>
+    /// <returns></returns>
+    for (size_t i = 0; i < fileInfoHeader.biSizeImage; i++) {
+        buffer[i] = ((buffer[i] +  40) > 255) ? 255: buffer[i] + 40;
+    }
+
+    const TCHAR* fileOutName =( const TCHAR *) "out.bmp";
+
+    std::cout << " Saving file" << fileOutName << std::endl;
+
+    SaveArrFile(_T("grid.bmp"), (const __int32*)buffer, fileHeader,fileInfoHeader);
+
+
+ /*
     for (unsigned int i = 0; i < fileInfoHeader.biHeight; i++) {
         for (unsigned int j = 0; j < fileInfoHeader.biWidth; j++) {
             read(fileStream, bufer, fileInfoHeader.biBitCount / 8);
@@ -146,24 +245,24 @@ int main(int argc, char *argv[])
         }
         fileStream.seekg(linePadding, std::ios_base::cur);
     }
- 
+ */
     // вывод
-    for (unsigned int i = 0; i < fileInfoHeader.biHeight; i++) {
-        for (unsigned int j = 0; j < fileInfoHeader.biWidth; j++) {
-            std::cout << std::hex
-                      << +rgbInfo[i][j].rgbRed << " "
-                      << +rgbInfo[i][j].rgbGreen << " "
-                      << +rgbInfo[i][j].rgbBlue << " "
-                      << +rgbInfo[i][j].rgbReserved
-                      << std::endl;
-        }
-        std::cout << std::endl;
-    }
+    //for (unsigned int i = 0; i < fileInfoHeader.biHeight; i++) {
+    //    for (unsigned int j = 0; j < fileInfoHeader.biWidth; j++) {
+    //        std::cout << std::hex
+    //                  << +rgbInfo[i][j].rgbRed << " "
+    //                  << +rgbInfo[i][j].rgbGreen << " "
+    //                  << +rgbInfo[i][j].rgbBlue << " "
+    //                  << +rgbInfo[i][j].rgbReserved
+    //                  << std::endl;
+    //    }
+    //    std::cout << std::endl;
+    //}
  
-    return 1;
+    return 0;
 }
  
-unsigned char bitextract(const unsigned int byte, const unsigned int mask) {
+unsigned char bitextract(const uint32_t byte, const uint32_t mask) {
     if (mask == 0) {
         return 0;
     }

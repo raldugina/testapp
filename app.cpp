@@ -80,7 +80,7 @@ BOOL  SaveArrFile(const TCHAR* filename, const __int32* arr,
 
 
 
-int  main(void) {
+int  main2(void) {
     //массив пикселей
     __int32 arr[111*222] = {0};
     int cw = 222; 
