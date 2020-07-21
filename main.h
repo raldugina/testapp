@@ -1,66 +1,71 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
- 
-// CIEXYZTRIPLE stuff
-typedef int FXPT2DOT30;
- 
+
+
+#include <stdint.h>
+// MyCIEXYZTRIPLE stuff
+typedef uint32_t MyFXPT2DOT30;
+#pragma pack(push, 1)
 typedef struct {
-    FXPT2DOT30 ciexyzX;
-    FXPT2DOT30 ciexyzY;
-    FXPT2DOT30 ciexyzZ;
-} CIEXYZ;
- 
+    MyFXPT2DOT30 ciexyzX;
+    MyFXPT2DOT30 ciexyzY;
+    MyFXPT2DOT30 ciexyzZ;
+} MyCIEXYZ;
+
 typedef struct {
-    CIEXYZ  ciexyzRed; 
-    CIEXYZ  ciexyzGreen; 
-    CIEXYZ  ciexyzBlue; 
-} CIEXYZTRIPLE;
+    MyCIEXYZ  ciexyzRed; 
+    MyCIEXYZ  ciexyzGreen; 
+    MyCIEXYZ  ciexyzBlue; 
+} MyCIEXYZTRIPLE;
  
 // bitmap file header
+
 typedef struct {
-    unsigned short bfType;
-    unsigned int   bfSize;
-    unsigned short bfReserved1;
-    unsigned short bfReserved2;
-    unsigned int   bfOffBits;
-} BITMAPFILEHEADER;
+    uint16_t bfType;    ////  11  22 00 00 
+    uint32_t  bfSize;  
+    uint16_t bfReserved1;
+    uint16_t bfReserved2;
+    uint32_t   bfOffBits;
+} MyBITMAPFILEHEADER;
  
 // bitmap info header
+
 typedef struct {
-    unsigned int   biSize;
-    unsigned int   biWidth;
-    unsigned int   biHeight;
-    unsigned short biPlanes;
-    unsigned short biBitCount;
-    unsigned int   biCompression;
-    unsigned int   biSizeImage;
-    unsigned int   biXPelsPerMeter;
-    unsigned int   biYPelsPerMeter;
-    unsigned int   biClrUsed;
-    unsigned int   biClrImportant;
-    unsigned int   biRedMask;
-    unsigned int   biGreenMask;
-    unsigned int   biBlueMask;
-    unsigned int   biAlphaMask;
-    unsigned int   biCSType;
-    CIEXYZTRIPLE   biEndpoints;
-    unsigned int   biGammaRed;
-    unsigned int   biGammaGreen;
-    unsigned int   biGammaBlue;
-    unsigned int   biIntent;
-    unsigned int   biProfileData;
-    unsigned int   biProfileSize;
-    unsigned int   biReserved;
-} BITMAPINFOHEADER;
+    uint32_t   biSize;
+    uint32_t   biWidth;
+    uint32_t   biHeight;
+    uint16_t biPlanes;
+    uint16_t biBitCount;
+    uint32_t   biCompression;
+    uint32_t   biSizeImage;
+    uint32_t   biXPelsPerMeter;
+    uint32_t   biYPelsPerMeter;
+    uint32_t   biClrUsed;
+    uint32_t   biClrImportant;
+    uint32_t   biRedMask;
+    uint32_t   biGreenMask;
+    uint32_t   biBlueMask;
+    uint32_t   biAlphaMask;
+    uint32_t   biCSType;
+    MyCIEXYZTRIPLE   biEndpoints;
+    uint32_t   biGammaRed;
+    uint32_t   biGammaGreen;
+    uint32_t   biGammaBlue;
+    uint32_t   biIntent;
+    uint32_t   biProfileData;
+    uint32_t   biProfileSize;
+    uint32_t   biReserved;
+} MyBITMAPINFOHEADER;
  
 // rgb quad
+
 typedef struct {
     unsigned char  rgbBlue;
     unsigned char  rgbGreen;
     unsigned char  rgbRed;
     unsigned char  rgbReserved;
-} RGBQUAD;
- 
+} MyRGBQUAD;
+#pragma pack(pop)
 // read bytes
 template <typename Type>
 void read(std::ifstream &fp, Type &result, std::size_t size) {
@@ -68,6 +73,6 @@ void read(std::ifstream &fp, Type &result, std::size_t size) {
 }
  
 // bit extract
-unsigned char bitextract(const unsigned int byte, const unsigned int mask);
+unsigned char bitextract(const uint32_t byte, const uint32_t mask);
  
 #endif // MAIN_H_INCLUDEDs
