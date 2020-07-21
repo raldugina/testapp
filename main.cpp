@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     /// <param name="argv"></param>
     /// <returns></returns>
     for (size_t i = 0; i < fileInfoHeader.biSizeImage; i++) {
-        buffer[i] = ((buffer[i] >255-40)) ? 255: buffer[i] + 40;
+        buffer[i] = ((buffer[i] > 255-40)) ? 255: buffer[i] + 40;
     }
 
     const TCHAR* fileOutName =( const TCHAR *) "out.bmp";
