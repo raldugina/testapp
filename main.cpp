@@ -88,11 +88,7 @@ int main(int argc, char *argv[])
         return 0;
     }
  */
-<<<<<<< HEAD
     const char * fileName = "C:\\source_code\\biggrin.BMP";
-=======
-    const char * fileName = "C:\\Users\\Aleksandr\\source\\repos\\ConsoleApplication1\\Debug\\RAY.BMP";
->>>>>>> 686ac5bedbe648bb37e2ebacc44e116a04c883ba
  
     // открываем файл
     std::ifstream fileStream(fileName, std::ifstream::binary);
@@ -227,11 +223,7 @@ int main(int argc, char *argv[])
     /// <param name="argv"></param>
     /// <returns></returns>
     for (size_t i = 0; i < fileInfoHeader.biSizeImage; i++) {
-<<<<<<< HEAD
-        buffer[i] = ((buffer[i] > 255-40)) ? 255: buffer[i] + 40;
-=======
-        buffer[i] = ((buffer[i] +  40) > 255) ? 255: buffer[i] + 40;
->>>>>>> 686ac5bedbe648bb37e2ebacc44e116a04c883ba
+        buffer[i] = (buffer[i] > (255-40)) ? 255: buffer[i] + 40;
     }
 
     const TCHAR* fileOutName =( const TCHAR *) "out.bmp";
