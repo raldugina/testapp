@@ -51,7 +51,7 @@ BOOL  SaveArrFile(const TCHAR* filename, const __int32* arr,   MyBITMAPFILEHEADE
 
     outfile.write((const char*)&fileheader, sizeof(MyBITMAPFILEHEADER));
     outfile.write((const char*)&fileinfoheader, sizeof(MyBITMAPINFOHEADER)-sizeof(MyCIEXYZTRIPLE)-48);
-    outfile.write((const char*)arr, fileinfoheader.biSizeImage);
+    outfile.write((const char*)arr, 735 * 718);
 
 
     // запись массива пикселей
@@ -80,6 +80,13 @@ BOOL  SaveArrFile(const TCHAR* filename, const __int32* arr,   MyBITMAPFILEHEADE
 }
 
 
+char adjustBrightness(char pixel, int32_t brightness) {
+    uint32_t res = (uint8_t) pixel + brightness; 
+    if (res > 255) res = 255;
+    if (res < 0) res = 0; 
+    return  char(res);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -88,7 +95,7 @@ int main(int argc, char *argv[])
         return 0;
     }
  */
-    const char * fileName = "C:\\source_code\\biggrin.BMP";
+    const char * fileName = "city.bmp";
  
     // открываем файл
     std::ifstream fileStream(fileName, std::ifstream::binary);
@@ -190,7 +197,7 @@ int main(int argc, char *argv[])
         return 0;
     }
  
-    if (fileInfoHeader.biBitCount != 16 && fileInfoHeader.biBitCount != 24 && fileInfoHeader.biBitCount != 32) {
+    if (fileInfoHeader.biBitCount != 8 && fileInfoHeader.biBitCount != 16 && fileInfoHeader.biBitCount != 24 && fileInfoHeader.biBitCount != 32) {
         std::cout << "Error: Unsupported BMP bit count." << std::endl;
         return 0;
     }
@@ -199,23 +206,24 @@ int main(int argc, char *argv[])
         std::cout << "Error: Unsupported BMP compression." << std::endl;
         return 0;
     }
- 
+ /*
     // rgb info
     MyRGBQUAD **rgbInfo = new MyRGBQUAD*[fileInfoHeader.biHeight];
  
     for (unsigned int i = 0; i < fileInfoHeader.biHeight; i++) {
         rgbInfo[i] = new MyRGBQUAD[fileInfoHeader.biWidth];
     }
- 
+  */
     // определение размера отступа в конце каждой строки
     int linePadding = ((fileInfoHeader.biWidth * (fileInfoHeader.biBitCount / 8)) % 4) & 3;
- 
+
     // чтение
    
-    std::cout << fileInfoHeader.biSizeImage;
-    char* buffer = new char[fileInfoHeader.biSizeImage];
+    std::cout << fileHeader.bfOffBits;
+    char* buffer = new char[735 * 718];
 
-    fileStream.read(buffer, fileInfoHeader.biSizeImage);
+    fileStream.seekg(56);
+    fileStream.read(buffer, 735*718);
     /// <summary>
     ///  Здесь 
     /// </summary>
@@ -223,7 +231,7 @@ int main(int argc, char *argv[])
     /// <param name="argv"></param>
     /// <returns></returns>
     for (size_t i = 0; i < fileInfoHeader.biSizeImage; i++) {
-        buffer[i] = (buffer[i] > (255-40)) ? 255: buffer[i] + 40;
+        buffer[i] =  adjustBrightness(buffer[i],-30);
     }
 
     const TCHAR* fileOutName =( const TCHAR *) "out.bmp";
